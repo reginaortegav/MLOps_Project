@@ -19,11 +19,11 @@ import openmeteo_requests
 app = func.FunctionApp()
 
 # Timer Triggered Function to Get Historical Weather Data Monthly
-@app.timer_trigger(schedule="0 0 0 1 * * ", arg_name="myTimer", run_on_startup=False,
+@app.timer_trigger(schedule="0 0 0 1 * *", arg_name="myTimer", run_on_startup=False,
               use_monitor=False) 
 
 def Get_Weather_Data(myTimer: func.TimerRequest) -> None:
-    
+
     logging.info('Running weather data update...')
 
     # Dynamically compute dates
