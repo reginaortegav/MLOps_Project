@@ -29,15 +29,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # Debug: List files to confirm folder exists
-      - name: List repository files
-        run: ls -R
-
-      - name: Install dependencies (Function app only)
-        run: |
-          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          python -m venv venv
-          source venv/bin/activate && pip install -r requirements.txt
+      # Optional: list files for debugging
+      - name: List function app files
+        run: ls -R ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
       - name: Zip artifact for deployment
         run: |
@@ -82,3 +76,4 @@ jobs:
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           scm-do-build-during-deployment: true
           enable-oryx-build: true
+          remote-build: true
