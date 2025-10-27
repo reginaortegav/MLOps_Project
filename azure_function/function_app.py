@@ -22,6 +22,11 @@ def Get_Weather_Data(myTimer: func.TimerRequest) -> None:
     # Custom Libraries
     import openmeteo_requests
 
+    # Storage Libraries
+    import io
+    import os
+    from azure.storage.blob import BlobServiceClient
+
     logging.info('Running weather data update...')
 
     # Dynamically compute dates
@@ -92,6 +97,19 @@ def Get_Weather_Data(myTimer: func.TimerRequest) -> None:
         daily_data["rain_sum"] = daily_rain_sum
 
         daily_dataframe = pd.DataFrame(data = daily_data)
+
+        # Save data to Azure Blob Storage
+        connect_str = os.getenv('AzureWebJobsStorage')
+        container_name = 'weather-data'
+        blob_name = f"weather_data_{datetime.now().strftime('%Y%m%d')}.csv"
+
+        blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+
+        # Save DataFrame to CSV in memory and upload
+        csv_buffer = io.StringIO()
+        daily_dataframe.to_csv(csv_buffer, index=False)
+        blob_client.upload_blob(csv_buffer.getvalue(), overwrite=True)
 
         logging.info(f"First 5 rows of data:\n{daily_dataframe.head()}")
     

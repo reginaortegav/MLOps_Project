@@ -3,4 +3,5 @@ pandas
 requests-cache
 retry-requests
 azure-functions
+azure-storage-blob
 openmeteo-requests
