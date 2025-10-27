@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'azure_function'
-  PYTHON_VERSION: '3.12'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'azure_function' # Path to your Function App folder
+  PYTHON_VERSION: '3.12' # Python version for your app
 
 jobs:
   build:
@@ -62,7 +62,7 @@ jobs:
           name: python-app
 
       - name: Unzip artifact
-        run: unzip release.zip -d ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        run: unzip release.zip
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -76,7 +76,4 @@ jobs:
         with:
           app-name: 'WeatherData'
           slot-name: 'Production'
-          package: './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-
-
-          
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
