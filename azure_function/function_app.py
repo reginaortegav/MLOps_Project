@@ -3,7 +3,6 @@ import logging
 import azure.functions as func
 
 app = func.FunctionApp()
-
 # Timer Triggered Function to Get Historical Weather Data Monthly
 @app.timer_trigger(schedule="0 0 0 1 * *", arg_name="myTimer", run_on_startup=False,
               use_monitor=False) 
@@ -103,23 +102,3 @@ def Get_Weather_Data(myTimer: func.TimerRequest) -> None:
 #weather_data = Get_Weather_Data(myTimer=None)
 #print(weather_data.head())
 
-@app.route(route="http_trigger", auth_level=func.AuthLevel.FUNCTION)
-def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
-
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
-
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
-    else:
-        return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
-        )
