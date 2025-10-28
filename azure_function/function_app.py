@@ -118,6 +118,7 @@ def Get_Historical_Weather_Data(myTimer: func.TimerRequest) -> None: #It will on
         logging.error(f"An error occurred: {e}")
 
 # Timer Triggered Function to Forecast Variables
+@app.function_name(name="GetCurrentWeatherFunction")
 @app.timer_trigger(schedule="0 0 0 * * *", arg_name="myTimer", run_on_startup=False,
               use_monitor=False) 
 def Get_Current_Weather_Data(myTimer: func.TimerRequest) -> None:
