@@ -23,15 +23,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Log in to ACR
-        run: az acr login --name $ACR_NAME
-
       - name: Build and push image to ACR
         run: |
           az acr build \
             --registry $ACR_NAME \
             --image $IMAGE_NAME:latest \
             --file ml_model/Dockerfile \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
             ml_model/
 
       - name: Delete existing container (if exists)
