@@ -53,4 +53,5 @@ jobs:
             --dns-name-label ml-model-api-${{ github.run_id }} \
             --ports 5000 \
             --location $LOCATION \
+            --os-type Linux \
             --restart-policy Always
