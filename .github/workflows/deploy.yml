@@ -43,15 +43,16 @@ jobs:
       - name: Deploy to Azure Container Instance
         run: |
           az container create \
-            --resource-group $RESOURCE_GROUP \
+            --resource-group "$RESOURCE_GROUP" \
             --name ml-model-api \
-            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:latest \
-            --registry-login-server $ACR_NAME.azurecr.io \
-            --registry-username ${{ secrets.ACR_USERNAME }} \
-            --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --environment-variables AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }} \
-            --dns-name-label ml-model-api-${{ github.run_id }} \
+            --image "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest" \
+            --registry-login-server "$ACR_NAME.azurecr.io" \
+            --registry-username "${{ secrets.ACR_USERNAME }}" \
+            --registry-password "${{ secrets.ACR_PASSWORD }}" \
+            --environment-variables AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --dns-name-label "ml-model-api-${{ github.run_id }}" \
             --ports 5000 \
-            --location $LOCATION \
-            --osType Linux \
+            --location "$LOCATION" \
+            --os-type Linux \
             --restart-policy Always
+
