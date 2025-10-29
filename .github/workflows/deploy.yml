@@ -51,6 +51,7 @@ jobs:
             --registry-password "${{ secrets.ACR_PASSWORD }}" \
             --environment-variables AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
             --dns-name-label "ml-model-api-${{ github.run_id }}" \
+            --ip-address public \
             --ports 5000 \
             --cpu 1 \
             --memory 2 \
