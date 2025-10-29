@@ -26,7 +26,8 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolu
 
 # Azure storage config (Replace with your actual connection string for testing)
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-container_name = "models"
+model_container_name = "models"
+preprocessor_container_name = "preprocessors"
 
 #blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
@@ -49,7 +50,33 @@ def get_next_model_version(blob_service_client, base_name="weather_model"):
 
     "Checks existing models in the container and returns the next version string."
 
-    container_client = blob_service_client.get_container_client(container_name)
+    container_client = blob_service_client.get_container_client(model_container_name)
+    
+    try:
+        existing_blobs = list(container_client.list_blobs())
+    except Exception as e:
+        print(f"Warning: could not list blobs: {e}")
+        existing_blobs = []
+
+    versions = []
+    pattern = re.compile(f"{base_name}_(\\d+\\.\\d+)\\.pkl")
+    for blob in existing_blobs:
+        match = pattern.match(blob.name)
+        if match:
+            versions.append(float(match.group(1)))
+    
+    if versions:
+        next_version = max(versions) + 0.1
+    else:
+        next_version = 1.1  # first model
+    
+    return f"{base_name}_{next_version:.1f}.pkl"
+
+def get_next_preprocessor_version(blob_service_client, base_name="preprocessor"):
+
+    "Checks existing models in the container and returns the next version string."
+
+    container_client = blob_service_client.get_container_client(preprocessor_container_name)
     
     try:
         existing_blobs = list(container_client.list_blobs())
@@ -101,7 +128,7 @@ def retrain_model(data: pd.DataFrame):
 
     categorical_pipeline = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('onehot', OneHotEncoder(handle_unknown='ignore'))])
+        ('onehot', OneHotEncoder(handle_unknown='ignore', drop='first'))])
 
     preprocessor = ColumnTransformer([
         ('num', numerical_pipeline, numerical_cols),
@@ -113,6 +140,23 @@ def retrain_model(data: pd.DataFrame):
 
     preprocessor.fit(X)
     X = pd.DataFrame(preprocessor.transform(X), columns=preprocessor.get_feature_names_out())
+
+    # Save preprocessor to Azure Blob Storage
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+    # Determine next preprocessor version
+    preprocessor_name = get_next_preprocessor_version(blob_service_client)
+
+    # Save preprocessor locally to buffer
+    buffer = BytesIO()
+    joblib.dump(preprocessor, buffer)
+    buffer.seek(0)
+
+    # Upload to blob
+    blob_client = blob_service_client.get_blob_client(preprocessor_container_name, preprocessor_name)
+    blob_client.upload_blob(buffer, overwrite=True)
+
+    print(f"Preprocessor uploaded as {preprocessor_name}")
 
     #Using split ratio because data is a time series
     ratio = 0.8
@@ -174,7 +218,7 @@ def retrain_model(data: pd.DataFrame):
     buffer.seek(0)
     
     # Upload to blob
-    blob_client = blob_service_client.get_blob_client(container_name, model_name)
+    blob_client = blob_service_client.get_blob_client(model_container_name, model_name)
     blob_client.upload_blob(buffer, overwrite=True)
     
     print(f"Model retrained and uploaded as {model_name}")
