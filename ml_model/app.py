@@ -8,7 +8,7 @@ import os
 from inference import run_inference_on_blob
 from train_model import retrain_model
 from detect_drift import detect_drift
-from utils.blob_helpers import get_latest_weather_blob
+from utils.blob_helpers import list_weather_blobs
 
 app = Flask(__name__)
 
@@ -19,45 +19,60 @@ models_container = "models"
 @app.route("/process", methods=["POST"])
 def process_data():
     data = request.get_json()
-    new_blob_name = data.get("blob_name")
+    received_blob_name = data.get("blob_name")
 
-    if not new_blob_name:
-        return jsonify({"error": "Missing blob_name"}), 400
+    if not received_blob_name:
+        return jsonify({"status": "failed", "error": "Missing blob_name in POST request"}), 400
 
     try:
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         container_client = blob_service_client.get_container_client(blob_container)
 
-        # Download new dataset (this month)
-        print(f"⬇️ Downloading new data blob: {new_blob_name}")
-        new_blob_client = container_client.get_blob_client(new_blob_name)
-        new_df = pd.read_csv(BytesIO(new_blob_client.download_blob().readall()))
+        # List all blobs and sort by date in filename
+        all_blobs = list_weather_blobs(container_client)
 
-        # Get previous (latest existing) training dataset
-        latest_blob_name = get_latest_weather_blob(blob_service_client, blob_container)
-        if latest_blob_name == new_blob_name:
-            return jsonify({"status": "ignored", "message": "Same as latest file"}), 200
+        if len(all_blobs) == 0:
+            return jsonify({"status": "failed", "error": "No blobs found in container"}), 400
 
-        print(f"Downloading reference data blob: {latest_blob_name}")
-        ref_blob_client = container_client.get_blob_client(latest_blob_name)
-        reference_df = pd.read_csv(BytesIO(ref_blob_client.download_blob().readall()))
+        elif len(all_blobs) == 1:
+            # Only one blob exists → skip drift detection, run inference on received blob
+            print("Only one blob in container — running inference on received blob...")
+            run_inference_on_blob(received_blob_name)
+            return jsonify({
+                "status": "success",
+                "message": "Only one blob — inference executed",
+                "blob": received_blob_name
+            }), 200
 
-        # Drift detection
-        drifted = detect_drift(reference_df, new_df)
-
-        if drifted:
-            print("Drift detected — Retraining model...")
-            retrain_model(new_df)
         else:
-            print("No drift detected — Running inference only...")
-            run_inference_on_blob(new_blob_name)
+            # Two or more blobs → check drift using the latest two
+            latest_blob_name = all_blobs[-1]
+            previous_blob_name = all_blobs[-2]
 
-        return jsonify({
-            "status": "success",
-            "drift_detected": drifted,
-            "reference_file": latest_blob_name,
-            "new_file": new_blob_name
-        }), 200
+            print(f"Downloading previous blob: {previous_blob_name}")
+            prev_blob_client = container_client.get_blob_client(previous_blob_name)
+            prev_df = pd.read_csv(BytesIO(prev_blob_client.download_blob().readall()))
+
+            print(f"Downloading latest blob: {latest_blob_name}")
+            latest_blob_client = container_client.get_blob_client(latest_blob_name)
+            latest_df = pd.read_csv(BytesIO(latest_blob_client.download_blob().readall()))
+
+            drifted = detect_drift(prev_df, latest_df)
+
+            if drifted:
+                print("Drift detected — Retraining model on latest blob...")
+                retrain_model(latest_df)
+            else:
+                print("No drift detected — Running inference on received blob...")
+                run_inference_on_blob(received_blob_name)
+
+            return jsonify({
+                "status": "success",
+                "drift_detected": drifted,
+                "previous_file": previous_blob_name,
+                "latest_file": latest_blob_name,
+                "inference_blob": received_blob_name
+            }), 200
 
     except Exception as e:
         return jsonify({"status": "failed", "error": str(e)}), 500

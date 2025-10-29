@@ -24,5 +24,11 @@ def get_latest_weather_blob(blob_service_client, container_name: str):
         raise ValueError("No weather_data_<date>.csv files found in container.")
 
     latest_blob = max(dated_blobs, key=lambda x: x[0])[1]
-    print(f"📦 Latest weather data blob found: {latest_blob}")
+    print(f"Latest weather data blob found: {latest_blob}")
     return latest_blob
+
+def list_weather_blobs(container_client):
+    blobs = [blob.name for blob in container_client.list_blobs()]
+    # Sort by date in filename, assuming format "weather_data_YYYYMMDD.csv"
+    blobs.sort(key=lambda x: x.split("_")[-1].split(".")[0])
+    return blobs
