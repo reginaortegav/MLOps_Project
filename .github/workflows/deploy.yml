@@ -52,7 +52,8 @@ jobs:
             --environment-variables AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
             --dns-name-label "ml-model-api-${{ github.run_id }}" \
             --ports 5000 \
+            --cpu 1 \
+            --memory 2 \
             --location "$LOCATION" \
             --os-type Linux \
             --restart-policy Always
-
