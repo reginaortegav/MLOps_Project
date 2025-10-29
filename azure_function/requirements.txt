@@ -6,3 +6,4 @@ retry-requests
 azure-functions
 azure-storage-blob
 openmeteo-requests
+azure-functions-worker
