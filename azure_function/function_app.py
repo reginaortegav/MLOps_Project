@@ -235,7 +235,7 @@ def BlobCreatedEventRelay(event: func.EventGridEvent):
         blob_url = event_data.get("url", "")
         blob_name = blob_url.split("/")[-1]
 
-        logging.info(f"📦 Blob created: {blob_name}")
+        logging.info(f"Blob created: {blob_name}")
 
         # Your Flask API endpoint (can be HTTP inside Azure)
         ML_API_URL = "http://fvr-ml-model-api.canadacentral.azurecontainer.io:5000/process"
