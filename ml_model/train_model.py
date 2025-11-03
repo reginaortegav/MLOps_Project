@@ -28,14 +28,19 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolu
 import mlflow
 import mlflow.sklearn
 
-# Azure storage config (Replace with your actual connection string for testing)
+# Ensure Azure Blob credentials are available for MLflow
+os.environ["AZURE_STORAGE_ACCOUNT"] = os.getenv("AZURE_STORAGE_ACCOUNT", "")
+os.environ["AZURE_STORAGE_ACCESS_KEY"] = os.getenv("AZURE_STORAGE_ACCESS_KEY", "")
+
+# Azure storage config (Replace with your actual connection string for testing
+account_name = os.getenv("AZURE_STORAGE_ACCOUNT")
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 model_container_name = "models"
 preprocessor_container_name = "preprocessors"
 experiment_container_name = "experiment-tracking"
 
 # Configure MLflow tracking
-mlflow.set_tracking_uri(f"wasbs://{experiment_container_name}@{os.getenv('AZURE_STORAGE_ACCOUNT')}.blob.core.windows.net")
+mlflow.set_tracking_uri(f"wasbs://{experiment_container_name}@{account_name}.blob.core.windows.net")
 mlflow.set_experiment(os.getenv("MLFLOW_EXPERIMENT_NAME", "WeatherModelTraining"))
 
 # Auxiliary function to determine season
