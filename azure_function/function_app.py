@@ -140,9 +140,6 @@ def Get_Current_Weather_Data(myTimer: func.TimerRequest) -> None:
     import io
     import os
     from azure.storage.blob import BlobServiceClient
-        # Dynamically compute dates
-    start_date = datetime(2020, 1, 1).strftime('%Y-%m-%d')
-    end_date = datetime.now().strftime('%Y-%m-%d')
 
     try:
         logging.info(f'Python timer trigger function ran at {datetime.now().isoformat()}')
@@ -158,6 +155,7 @@ def Get_Current_Weather_Data(myTimer: func.TimerRequest) -> None:
             "latitude": 40.4165,
             "longitude": -3.7026,
             "daily": ["temperature_2m_mean", "shortwave_radiation_sum", "cloud_cover_mean", "dew_point_2m_mean", "relative_humidity_2m_mean", "pressure_msl_mean", "surface_pressure_mean", "wind_gusts_10m_mean", "wet_bulb_temperature_2m_mean", "daylight_duration", "sunshine_duration", "snowfall_sum", "rain_sum"],
+            "forecast_days": 14,
         }
         responses = openmeteo.weather_api(url, params=params)
         # Process first location. Add a for-loop for multiple locations or weather models
