@@ -214,8 +214,8 @@ def retrain_model(data: pd.DataFrame):
         print(f"Model retrained and uploaded as {model_name}")
 
         # Log preprocessor and model to MLflow
-        mlflow.sklearn.log_model(preprocessor, artifact_path="preprocessor")
-        mlflow.sklearn.log_model(model, artifact_path="model")
+        mlflow.sklearn.log_model(preprocessor, name="preprocessor")
+        mlflow.sklearn.log_model(model, name="model")
 
         # Add metadata
         mlflow.set_tag("model_name", model_name)
