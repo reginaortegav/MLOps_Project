@@ -1,6 +1,23 @@
-pandas
+# Core dependencies
 flask
+pandas
 numpy
-mlflow
-scikit-learn==1.6.1
+scikit-learn
+joblib
+
+# Azure SDKs
 azure-storage-blob
+
+# MLflow for experiment tracking
+mlflow
+
+# Data handling and requests
+requests
+requests-cache
+retry-requests
+
+# If you still have Azure Functions trigger code somewhere
+azure-functions
+
+# Optional: for drift detection
+scipy
