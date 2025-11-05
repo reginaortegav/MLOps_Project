@@ -40,10 +40,13 @@ mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
 experiment_name = os.getenv("MLFLOW_EXPERIMENT_NAME", "WeatherModelTraining")
 experiment_name = experiment_name + "_SVR"
 
+"""
+#Run this section only when creating a new experiment, the API could fail
 # Initialize MLflow client
 client = mlflow.tracking.MlflowClient()
 experiment = client.get_experiment_by_name(experiment_name)
 artifact_location = f"wasbs://{experiment_container_name}@{account_name}.blob.core.windows.net"
+
 
 # Set up MLflow experiment
 if experiment is None:
@@ -54,6 +57,7 @@ if experiment is None:
 else:
     experiment_id = experiment.experiment_id
     print(f"Using existing MLflow experiment '{experiment_name}' (ID: {experiment_id})")
+"""
 
 try:
     mlflow.set_tracking_uri(mlflow_tracking_uri)

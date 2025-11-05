@@ -58,10 +58,13 @@ container_client = blob_service_client.get_container_client(data_container_name)
 data_client = container_client.get_blob_client(training_data_blob)
 data = pd.read_csv(BytesIO(data_client.download_blob().readall()))
 
+"""
+#Run this section only when creating a new experiment, the API could fail
 # Initialize MLflow client
 client = mlflow.tracking.MlflowClient()
 experiment = client.get_experiment_by_name(experiment_name)
 artifact_location = f"wasbs://{experiment_container_name}@{account_name}.blob.core.windows.net"
+
 
 # Set up MLflow experiment
 if experiment is None:
@@ -72,13 +75,14 @@ if experiment is None:
 else:
     experiment_id = experiment.experiment_id
     print(f"Using existing MLflow experiment '{experiment_name}' (ID: {experiment_id})")
-
+"""
 try:
     mlflow.set_tracking_uri(mlflow_tracking_uri)
     mlflow.set_experiment(experiment_name)
     print(f"MLflow connected to: {mlflow_tracking_uri}")
 except Exception as e:
     print(f"MLflow connection failed: {e}")
+
 
 # FEATURE ENGINEERING
 data['month'] = pd.to_datetime(data['date']).dt.month
