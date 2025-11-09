@@ -4,9 +4,6 @@ An end-to-end machine learning operations system that collects weather data, per
 
 ## System Architecture
 
-![Architecture Diagram]
-*(Consider adding an architecture diagram)*
-
 ### Key Components:
 
 1. **Data Collection (Azure Functions)**
@@ -33,28 +30,144 @@ An end-to-end machine learning operations system that collects weather data, per
    - Historical data analysis
    - Location: [weather_app/](weather_app/)
 
-## Data Flow
+### Overall System Architecture
+```mermaid
+graph TB
+    subgraph Azure["Azure Cloud"]
+        AF[Azure Functions]
+        BLOB[(Azure Blob Storage)]
+        ACI[Azure Container Instance]
+        ACR[(Azure Container Registry)]
+        EG[Event Grid]
+        MLF[MLflow Server]
+    end
+    
+    subgraph DataCollection["Data Collection"]
+        OM[Open-Meteo API]
+        AF -->|Fetch Data| OM
+        AF -->|Store| BLOB
+        BLOB -->|Trigger| EG
+        EG -->|Notify| ACI
+    end
+    
+    subgraph MLPipeline["ML Pipeline"]
+        ACI -->|Process Data| BLOB
+        ACI -->|Track Experiments| MLF
+        ACI -->|Store Models| BLOB
+    end
+    
+    subgraph WebApp["Web Application"]
+        ST[Streamlit Dashboard]
+        ST -->|Read Data| BLOB
+        ST -->|Get Predictions| ACI
+        ST -->|View Experiments| MLF
+    end
+```
 
-1. Azure Functions collect weather data:
-   ```mermaid
-   graph LR
-      A[Timer Trigger] --> B[Collect Weather Data]
-      B --> C[Save to Blob Storage]
-      C --> D[Event Grid Trigger]
-      D --> E[ML API]
-   ```
+### CI/CD Pipeline Architecture
+```mermaid
+graph LR
+    subgraph GitHub["GitHub Repository"]
+        C[Commit] --> A[GitHub Actions]
+        A --> T[Run Tests]
+        T --> B[Build]
+    end
+    
+    subgraph Azure["Azure Services"]
+        subgraph Functions["Azure Functions"]
+            AF[Weather Data Function]
+        end
+        
+        subgraph Containers["Container Services"]
+            ACR[(Azure Container Registry)]
+            ACI[Azure Container Instance]
+        end
+    end
+    
+    B -->|Deploy Function| AF
+    B -->|Push Image| ACR
+    ACR -->|Deploy| ACI
+```
 
-2. ML Pipeline processes new data:
-   - Checks for data drift
-   - Retrains model if drift detected
-   - Generates new predictions
-   - Stores results in Azure Blob Storage
+### ML Training Pipeline
+```mermaid
+graph TB
+    subgraph DataProcessing["Data Processing"]
+        RD[Raw Data] --> FE[Feature Engineering]
+        FE --> Split[Train/Test Split]
+    end
+    
+    subgraph Training["Model Training"]
+        Split --> TR[Train SVR Model]
+        TR --> EV[Evaluate Model]
+        EV --> DD[Drift Detection]
+    end
+    
+    subgraph MLflow["MLflow Tracking"]
+        TR -->|Log Params| MP[Model Parameters]
+        EV -->|Log Metrics| MM[Model Metrics]
+        TR -->|Save| MA[Model Artifacts]
+    end
+    
+    subgraph Deployment["Model Deployment"]
+        DD -->|No Drift| CP[Continue Predictions]
+        DD -->|Drift Detected| RT[Retrain Model]
+        RT --> DP[Deploy New Model]
+    end
+```
 
-3. Web dashboard visualizes:
-   - Current weather conditions
-   - Model predictions
-   - Historical trends
-   - MLflow experiments
+### Web Application Architecture
+```mermaid
+graph LR
+    subgraph Frontend["Streamlit Dashboard"]
+        UI[User Interface] --> DP[Data Processing]
+        DP --> VZ[Visualizations]
+    end
+    
+    subgraph Backend["Azure Services"]
+        API[ML Model API]
+        BLOB[(Blob Storage)]
+        MLF[MLflow Server]
+    end
+    
+    UI -->|Fetch Predictions| API
+    UI -->|Get Historical Data| BLOB
+    UI -->|View Experiments| MLF
+    
+    subgraph Monitoring["Monitoring"]
+        AM[Azure Monitor]
+        LOG[App Insights]
+    end
+    
+    API --> AM
+    API --> LOG
+```
+
+### Data Flow Pipeline
+```mermaid
+graph TB
+    subgraph Collection["Data Collection"]
+        OM[Open-Meteo API] -->|Weather Data| AF[Azure Function]
+        AF -->|Store| BLOB[(Blob Storage)]
+    end
+    
+    subgraph Processing["Data Processing"]
+        BLOB -->|Trigger| EG[Event Grid]
+        EG -->|Notify| ML[ML Pipeline]
+        ML -->|Process| FE[Feature Engineering]
+        FE -->|Train| SVR[SVR Model]
+    end
+    
+    subgraph Storage["Model Storage"]
+        SVR -->|Save| ART[Model Artifacts]
+        SVR -->|Log| MLF[MLflow]
+    end
+    
+    subgraph Serving["Model Serving"]
+        ART -->|Load| API[Flask API]
+        API -->|Serve| WEB[Web Dashboard]
+    end
+```
 
 ## Setup & Installation
 
