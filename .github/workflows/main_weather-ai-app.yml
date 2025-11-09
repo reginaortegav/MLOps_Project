@@ -59,7 +59,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C449A1CA966A4947971A482419A5017B }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_80E898FD54074DDBBC90352C9852AA39 }}
 
-      # Add or update environment variables in Azure Web App
       - name: Configure app settings in Azure
         uses: azure/appservice-settings@v1
         with:
@@ -81,4 +80,4 @@ jobs:
         with:
           app-name: 'weather-ai-app'
           slot-name: 'Production'
-          package: ./weather_app
+          package: . 
