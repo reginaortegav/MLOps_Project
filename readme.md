@@ -237,7 +237,7 @@ The project uses GitHub Actions for CI/CD:
 - Third-party services used: Open-Meteo and Azure services; ensure compliance with their terms.
 
 ----
-For code-level questions, refer to the specific files above (links). If you want, I can: generate a more compact Quickstart, add a sample `local.settings.json`, or create an Azure deployment checklist.// filepath: README.md
+For code-level questions, refer to the specific files above (links).
 
 ## Acknowledgments
 
