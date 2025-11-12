@@ -207,9 +207,22 @@ Required environment variables:
 AZURE_STORAGE_CONNECTION_STRING="your_connection_string"
 AZURE_STORAGE_ACCOUNT="your_account_name"
 
+# Azure Functions
+AZURE_CLIENT_ID="created_automatically_from_azurefunction_deploymentcenter"
+AZURE_TENANT_ID="created_automatically_from_azurefunction_deploymentcenter"
+AZURE_SUBSCRIPTION_ID="created_automatically_from_azurefunction_deploymentcenter"
+
 # MLflow Configuration
 MLFLOW_TRACKING_URI="your_mlflow_uri"
 MLFLOW_EXPERIMENT_NAME="WeatherModelTraining"
+
+# Azure Container Registry
+AZURE_CREDENTIALS="azure_rbac_credentials"
+ACR_NAME="your_azure_registry_name"
+ACR_USERNAME="registry_username"
+ACR_PASSWORD="registry_password"
+RESOURCE_GROUP="your_resource_group_name"
+LOCATION="resources_location" # E.g. canadacentral
 
 # API Endpoints
 ML_API_URL="your_api_endpoint"
@@ -323,16 +336,9 @@ The project uses GitHub Actions for CI/CD:
    - Blob storage
    - Event-driven architecture
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## Troubleshooting tips
 
+- Azure Setup Guide: Please check the document in [docs/Azure_Setup_Guide.docx](docs/Azure_Setup_Guide.docx) for more information.
 - Blob access: verify `AZURE_STORAGE_CONNECTION_STRING` / `AzureWebJobsStorage`.
 - MLflow: verify `MLFLOW_TRACKING_URI` and container/experiment permissions.
 - Azure Functions: local settings `local.settings.json` is ignored by `.funcignore` and `.gitignore` — ensure it's set locally for development.
