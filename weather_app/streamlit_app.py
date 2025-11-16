@@ -31,30 +31,54 @@ import os
 import streamlit as st
 from azure.storage.blob import BlobServiceClient
 
-# Lee de Secrets primero; si no, de variables de entorno
-MLFLOW_TRACKING_URI = (
-    os.getenv("MLFLOW_TRACKING_URI")
-    or st.secrets.get("mlflow", {}).get("tracking_uri")
-)
+# === Lee credenciales desde Secrets o env ===
+az = st.secrets.get("azure", {})
 
 conn_str = (
     os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    or st.secrets.get("azure", {}).get("connection_string")
+    or az.get("connection_string")
 )
+account_name = az.get("account_name")
+sas_token    = az.get("sas_token")
 
-# Validaciones claras (evitan el AttributeError)
-if not isinstance(conn_str, str) or not conn_str.strip():
-    st.error(
-        "Azure connection string is missing.\n\n"
-        "Add it in **Secrets** as:\n"
-        "[azure]\nconnection_string = \"DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net\""
-    )
+def _clean(s: str) -> str:
+    return s.replace("\n", "").replace("\r", "").strip()
+
+client = None
+err_msgs = []
+
+try:
+    if isinstance(conn_str, str) and conn_str.strip():
+        conn_str = _clean(conn_str)
+        # Debe contener estas claves si es una connection string con AccountKey
+        if "AccountKey=" in conn_str and "AccountName=" in conn_str:
+            client = BlobServiceClient.from_connection_string(conn_str)
+        else:
+            err_msgs.append("La connection string no parece incluir AccountKey/AccountName.")
+    elif account_name and sas_token:
+        # Modo SAS
+        account_name = _clean(account_name)
+        sas_token    = _clean(sas_token)
+        url = f"https://{account_name}.blob.core.windows.net"
+        client = BlobServiceClient(account_url=url, credential=sas_token)
+    else:
+        err_msgs.append(
+            "Faltan credenciales. Define en Secrets alguno de:\n"
+            "1) [azure].connection_string = \"DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net\"\n"
+            "   (una sola línea, sin saltos)\n"
+            "o\n"
+            "2) [azure].account_name = \"tu_cuenta\"  y  [azure].sas_token = \"?sv=...&sig=...\"\n"
+        )
+
+except Exception as e:
+    st.error(f"No se pudo inicializar BlobServiceClient: {e}")
     st.stop()
 
-# (Opcional) Debug seguro: muestra longitud, no el secreto
-st.write(f"Azure conn string length: {len(conn_str)}")
+if client is None:
+    st.error("\n".join(err_msgs))
+    st.stop()
 
-blob_service_client = BlobServiceClient.from_connection_string(conn_str.strip())
+blob_service_client = client  # úsalo como antes
 
 DAILY_DATA_PATH = "daily-weather-data"
 HISTORICAL_DATA_PATH = "weather-data"
