@@ -27,12 +27,39 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
-CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+import os
+import streamlit as st
+from azure.storage.blob import BlobServiceClient
+
+# Lee de Secrets primero; si no, de variables de entorno
+MLFLOW_TRACKING_URI = (
+    os.getenv("MLFLOW_TRACKING_URI")
+    or st.secrets.get("mlflow", {}).get("tracking_uri")
+)
+
+conn_str = (
+    os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    or st.secrets.get("azure", {}).get("connection_string")
+)
+
+# Validaciones claras (evitan el AttributeError)
+if not isinstance(conn_str, str) or not conn_str.strip():
+    st.error(
+        "Azure connection string is missing.\n\n"
+        "Add it in **Secrets** as:\n"
+        "[azure]\nconnection_string = \"DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net\""
+    )
+    st.stop()
+
+# (Opcional) Debug seguro: muestra longitud, no el secreto
+st.write(f"Azure conn string length: {len(conn_str)}")
+
+blob_service_client = BlobServiceClient.from_connection_string(conn_str.strip())
+
 DAILY_DATA_PATH = "daily-weather-data"
 HISTORICAL_DATA_PATH = "weather-data"
 
-blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+
 
 # ─────────────────────────────────────────────
 # 2. Website Header
